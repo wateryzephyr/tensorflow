@@ -339,9 +339,17 @@ def _find_cublas_config(base_paths, required_version, cuda_version):
 def _find_cudnn_config(base_paths, required_version):
 
   def get_header_version(path):
-    version = (
-        _get_header_version(path, name)
-        for name in ("CUDNN_MAJOR", "CUDNN_MINOR", "CUDNN_PATCHLEVEL"))
+    names = ("CUDNN_MAJOR", "CUDNN_MINOR", "CUDNN_PATCHLEVEL")
+    try:
+      version = (_get_header_version(path, name) for name in names)
+    except Exception as e:
+      print("Couldn't do it the conventional way: %s" % str(e))
+      dir_path, filename = os.path.split(path)
+      version = (
+        _get_header_version(
+            os.path.join(dir_path, "cudnn_version.h"), name
+        ) for name in names
+      )
     return ".".join(version)
 
   header_path, header_version = _find_header(base_paths, "cudnn.h",
